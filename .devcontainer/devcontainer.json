@@ -1,0 +1,19 @@
+
+{
+	"forwardPorts": [8001, 8002, 5000],
+	"postCreateCommand": "/bin/bash -c .devcontainer/startup_script.sh",
+	"postAttachCommand": "/bin/bash -c '.devcontainer/post_attach.sh'",
+	
+	"customizations": {
+		"vscode": {		
+			"extensions": [
+				"ms-kubernetes-tools.vscode-kubernetes-tools"
+			]
+		}
+	},
+	"hostRequirements": {
+		"cpus": 4,
+		"memory": "8gb",
+		"storage": "32gb" 
+	}
+}
