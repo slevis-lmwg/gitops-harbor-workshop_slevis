@@ -3,7 +3,6 @@ This repository contains a preconfigured environment through GitHub codespaces.
 
 ## Getting Started
 
-<hr>
 1. **Fork** this repository in to your own GitHub account. 
     <img src="https://github.com/NicholasCote/gitops-harbor-workshop/blob/main/media/gitops-fork.png" alt="Fork" style="margin: auto"><br>
  a. **Owner** will be your GitHub username 
@@ -11,4 +10,3 @@ This repository contains a preconfigured environment through GitHub codespaces.
 3. Select the Codespaces tab 
 4. Use the `Create codespace on main` button to launch a new codespace
     <img src="https://github.com/NicholasCote/gitops-harbor-workshop/blob/main/media/gitops-codespace.png" alt="Fork" style="margin: auto">
-<hr>
