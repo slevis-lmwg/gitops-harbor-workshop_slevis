@@ -4,7 +4,7 @@ This repository contains a preconfigured environment through GitHub codespaces.
 ## Getting Started
 
 1. **Fork** this repository in to your own GitHub account. 
-    <img src="https://github.com/NicholasCote/gitops-harbor-workshop/blob/main/media/gitops-fork.png" alt="Fork" style="margin: auto">
+    <img src="https://github.com/NicholasCote/gitops-harbor-workshop/blob/main/media/gitops-fork.png" alt="Fork" style="margin: auto"><hr>
  a. **Owner** will be your GitHub username 
 2. Select the button labeled `<> Code` in the upper right
 3. Select the Codespaces tab 
