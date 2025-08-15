@@ -10,7 +10,8 @@ This repository contains a preconfigured environment through GitHub Codespaces.
 2. Select the button labeled `<> Code` in the upper right
 3. Select the Codespaces tab 
 4. Use the `Create codespace on main` button to launch a new codespace
-    <img src="https://github.com/NicholasCote/gitops-harbor-workshop/blob/main/media/gitops-codespace.png" alt="Fork" style="margin: auto">
+    
+<img src="https://github.com/NicholasCote/gitops-harbor-workshop/blob/main/media/gitops-codespace.png" alt="Fork" style="margin: auto">
 
 ## Codespace & devcontainer
 
@@ -30,7 +31,8 @@ When the codespace starts, it looks to `.devcontainer/devcontainer.json` for con
   - Provides access information
 
 It takes a minute for these to complete. You will see output in the terminal at the bottom of the screen and this on successful completion.
-    <img src="https://github.com/NicholasCote/gitops-harbor-workshop/blob/main/media/gitops-setup.png" alt="Fork" style="margin: auto">
+    
+<img src="https://github.com/NicholasCote/gitops-harbor-workshop/blob/main/media/gitops-setup.png" alt="Fork" style="margin: auto">
 
 ## Access Container Application
 
@@ -40,5 +42,6 @@ Let's forward the container application and look at it live. In the terminal run
 kubectl port-forward svc/flask-demo -n argocd 8001:5000
 ```
 
-The application is now available at [http://127.0.0.1:8001]. There will be a pop up in the bottom right corner with an `Open in Browser` button for quick access. 
-    <img src="https://github.com/NicholasCote/gitops-harbor-workshop/blob/main/media/gitops-forward.png" alt="Fork" style="margin: auto">
+The application is now available at http://127.0.0.1:8001. There will be a pop up in the bottom right corner with an `Open in Browser` button for quick access. 
+
+<img src="https://github.com/NicholasCote/gitops-harbor-workshop/blob/main/media/gitops-forward.png" alt="Fork" style="margin: auto">
