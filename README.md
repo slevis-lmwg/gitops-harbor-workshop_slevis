@@ -28,3 +28,6 @@ When the codespace starts, it looks to `.devcontainer/devcontainer.json` for con
   - Restarts Argo CD to apply changes
   - Deploys a Flask application to Argo CD
   - Provides access information
+
+It takes a minute for these to complete. You will see output in the terminal at the bottom of the screen and this on successful completion.
+    <img src="https://github.com/NicholasCote/gitops-harbor-workshop/blob/main/media/gitops-setup.png" alt="Fork" style="margin: auto">
