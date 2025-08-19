@@ -9,13 +9,13 @@ GitOps treats a Git repository as the single source of truth for infrastructure 
 ## Getting Started
 
 1. **Fork** this repository into your own GitHub account. 
-    <img src="https://github.com/NicholasCote/gitops-harbor-workshop/blob/main/media/gitops-fork.png" alt="Fork" style="margin: auto"><br>
+    ![Fork](https://github.com/NicholasCote/gitops-harbor-workshop/blob/main/media/gitops-fork.png)
     a. **Owner** will be your GitHub username 
 2. Select the button labeled `<> Code` in the upper right
 3. Select the Codespaces tab 
 4. Use the `Create codespace on main` button to launch a new codespace
     
-<img src="https://github.com/NicholasCote/gitops-harbor-workshop/blob/main/media/gitops-codespace.png" alt="Fork" style="margin: auto">
+![Codespace Create](https://github.com/NicholasCote/gitops-harbor-workshop/blob/main/media/gitops-codespace.png)
 
 ## Container Registry
 
@@ -35,11 +35,13 @@ Now that you have access to the gitops-workshop project, we need to create a rob
 2. Navigate to the `gitops-workshop` project (you should have Project Admin privileges)
 3. Click the **Robot Accounts** tab
 4. Click **+ NEW ROBOT ACCOUNT**
+  ![New Robot Account](https://github.com/NicholasCote/gitops-harbor-workshop/blob/main/media/gitops-add-robot.png)
 5. In the popup window, provide the following details:
    - **Name**: Choose a descriptive name (this will result in `robot$gitops-workshop+{your_name}`)
    - **Expiration time**: Set a reasonable expiration date (e.g., 1 month from now) - avoid using "never expire"
    - **Description**: Optional description for the robot account
    - **Permissions**: Ensure "Push" and "Pull" permissions are selected
+  ![Robot Permissions](https://github.com/NicholasCote/gitops-harbor-workshop/blob/main/media/gitops-robot-permissions.png)
 
 6. Click **Add** to create the robot account
 7. **Important**: Copy and store the one-time secret securely - it will not be shown again and should not be exposed in plain text publicly
@@ -55,6 +57,10 @@ GitHub Actions needs secure access to your container registry credentials:
 3. **Name**: `HARBOR_ROBOT_PW` (or `DOCKER_HUB_TOKEN` if using Docker Hub)
 4. **Secret**: Paste the robot account token you copied earlier
 5. Click "Add secret"
+6. Click "New repository secret"
+7. **Name**: `HARBOR_ROBOT_USER` (or `DOCKER_HUB_USER` if using Docker Hub)
+8. **Secret**: Paste the robot account username
+9. Click "Add secret"
 
 Your workflow will now be able to authenticate with the container registry securely.
 
@@ -77,7 +83,7 @@ When the codespace starts, it looks to `.devcontainer/devcontainer.json` for con
 
 It takes a minute for these to complete. You will see output in the terminal at the bottom of the screen and this on successful completion.
     
-<img src="https://github.com/NicholasCote/gitops-harbor-workshop/blob/main/media/gitops-setup.png" alt="Fork" style="margin: auto">
+![Setup](https://github.com/NicholasCote/gitops-harbor-workshop/blob/main/media/gitops-setup.png)
 
 ## Argo CD
 
@@ -125,7 +131,7 @@ kubectl port-forward svc/flask-demo -n argocd 8001:5000
 
 The application is now available at http://127.0.0.1:8001. There will be a pop up in the bottom right corner with an `Open in Browser` button for quick access. 
 
-<img src="https://github.com/NicholasCote/gitops-harbor-workshop/blob/main/media/gitops-forward.png" alt="Fork" style="margin: auto">
+![Port Forward](https://github.com/NicholasCote/gitops-harbor-workshop/blob/main/media/gitops-forward.png)
 
 We have confirmed the web application is up and running. 
 
@@ -145,7 +151,7 @@ Now let's create the automation workflow that will build, push, and deploy your 
    touch .github/workflows/flask-app-cicd.yaml
    ```
 
-3. Open the file and add the following workflow configuration:
+3. Open the file and add the following workflow configuration: **Note:** If you used Docker Hub make sure to replace the HARBOR secrets to match the ones used for Docker Hub.
 
 ```yaml
 name: Flask App CI/CD Pipeline
@@ -166,6 +172,7 @@ env:
   GITHUB_BRANCH: ${{ github.ref_name }}
   REGISTRY: hub.k8s.ucar.edu
   PROJECT: gitops-workshop
+  USERNAME: {GitHub Username Lowercase}
 
 jobs:
   image-build-push:
@@ -184,20 +191,20 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
-          username: robot${{ github.actor }}+gitopsworkshop
+          username: ${{ secrets.HARBOR_ROBOT_NAME }}
           password: ${{ secrets.HARBOR_ROBOT_PW }}
           
       - name: Build container image
         run: |
-          docker buildx build -t ${{ env.REGISTRY }}/${{ env.PROJECT }}/flask-demo-${{ github.actor }}:${{ steps.date.outputs.date }} flask-app/
+          docker buildx build -t ${{ env.REGISTRY }}/${{ env.PROJECT }}/flask-demo-${{ env.USERNAME }}:${{ steps.date.outputs.date }} .
           
       - name: Push container image
         run: |
-          docker push ${{ env.REGISTRY }}/${{ env.PROJECT }}/flask-demo-${{ github.actor }}:${{ steps.date.outputs.date }}
+          docker push ${{ env.REGISTRY }}/${{ env.PROJECT }}/flask-demo-${{ env.USERNAME }}:${{ steps.date.outputs.date }}
           
       - name: Update Helm values.yaml
         run: |
-          sed -i "s|image: .*|image: ${{ env.REGISTRY }}/${{ env.PROJECT }}/flask-demo-${{ github.actor }}:${{ steps.date.outputs.date }}|" flask-helm/values.yaml
+          sed -i "s|image: .*|image: ${{ env.REGISTRY }}/${{ env.PROJECT }}/flask-demo-${{ env.USERNAME }}:${{ steps.date.outputs.date }}|" flask-helm/values.yaml
           
       - name: Update Helm Chart.yaml appVersion
         run: |
@@ -260,7 +267,9 @@ Once the workflow completes successfully:
 
 1. **Check the updated files**: Your `flask-helm/values.yaml` and `flask-helm/Chart.yaml` should now reference the new container image
 2. **Wait for Argo CD**: Argo CD checks for changes every 3 minutes, or you can manually sync in the Argo CD UI
-3. **See the updated application**: Refresh your browser tab with the Flask app to see your changes live
+3. **See the updated application**: Run `kubectl port-forward svc/flask-demo -n argocd 8001:5000` and see the new site with a green background
+
+**Note:** If port-forward was running when the image was updated it will hit an error and stop. Rerunning the port-forward command will connect the new container
 
 You've now experienced the complete GitOps cycle:
 - **Code Change** → **Automated Build** → **Registry Push** → **Chart Update** → **Automated Deployment**
