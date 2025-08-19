@@ -6,5 +6,5 @@ webapp:
   path: /
   welcomeMessage: "Welcome to the Flask Demo!"
   container: 
-    image: docker.io/ncging/argo-flask-demo:2025-08-08.11.09
+    image: hub.k8s.ucar.edu/gitops-workshop/flask-demo-slevis-lmwg:2025-08-19.21.41
     port: 5000
