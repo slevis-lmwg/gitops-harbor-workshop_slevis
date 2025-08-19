@@ -21,7 +21,10 @@ GitOps treats a Git repository as the single source of truth for infrastructure 
 
 A container registry is a central location that hosts container images. There are a number of free public container registries, ghcr.io, quay.io, and hub.docker.com for example. The CIRRUS platform run by CISL contains its own container registry, https://hub.k8s.ucar.edu/, available to all UCAR staff. In order to push images to the CISL Container Registry, built on [Harbor](https://goharbor.com/), a CIRRUS admin has to create a project and add you to it. 
 
-At this point in the workshop we will add everyone to the gitops-workshop project with admin privileges. In order to do this you have to login to hub.k8s.ucar.edu first and then I have the ability to add you to the Harbor project. 
+At this point in the workshop we will add everyone to the gitops-workshop project with admin privileges. 
+
+1. Login to https://hub.k8s.ucar.edu/ via the `LOGIN WITH Entra ID` button
+2. Once logged in I can add you as an admin to the gitops-workshop project
 
 **Note:** If you prefer to use a public repository like Docker Hub you can do this and still follow along with the workshop content. You will not use a robot account in Docker Hub, just your user id and password/API token. 
 
