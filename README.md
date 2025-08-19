@@ -43,7 +43,7 @@ Now that you have access to the gitops-workshop project, we need to create a rob
    - **Permissions**: Ensure "Push" and "Pull" permissions are selected
   ![Robot Permissions](https://github.com/NicholasCote/gitops-harbor-workshop/blob/main/media/gitops-robot-permissions.png)
 
-6. Click **Add** to create the robot account
+6. Click **Finish** to create the robot account
 7. **Important**: Copy and store the one-time secret securely - it will not be shown again and should not be exposed in plain text publicly
 
 **Note:** If you need to generate a new secret later, select the robot account, open the **ACTIONS** dropdown, and click **REFRESH SECRET**.
@@ -54,6 +54,7 @@ GitHub Actions needs secure access to your container registry credentials:
 
 1. In your forked repository, go to **Settings** → **Secrets and variables** → **Actions**
 2. Click "New repository secret"
+  ![GitHub Secret](https://github.com/NicholasCote/gitops-harbor-workshop/blob/main/media/gitops-add-secret.png)
 3. **Name**: `HARBOR_ROBOT_PW` (or `DOCKER_HUB_TOKEN` if using Docker Hub)
 4. **Secret**: Paste the robot account token you copied earlier
 5. Click "Add secret"
