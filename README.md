@@ -6,14 +6,6 @@ This repository contains a preconfigured environment through GitHub Codespaces.
 
 GitOps treats a Git repository as the single source of truth for infrastructure and applications. When you commit your desired state to Git, an automated tool ensures your running application matches the repository code. This approach brings all the benefits of Git to deployments.
 
-## Container Registry
-
-A container registry is a central location that hosts container images. There are a number of free public container registries, ghcr.io, quay.io, and hub.docker.com for example. The CIRRUS platform run by CISL contains its own container registry, https://hub.k8s.ucar.edu/, available to all UCAR staff. In order to push images to the CISL Container Registry, built on [Harbor](https://goharbor.com/), a CIRRUS admin has to create a project and add you to it. 
-
-At this point in the workshop we will add everyone to the gitops-workshop project with admin privileges. 
-
-**Note:** If you prefer to use a public repository like Docker Hub you can do this and still follow along with the workshop content. 
-
 ## Getting Started
 
 1. **Fork** this repository into your own GitHub account. 
@@ -24,6 +16,47 @@ At this point in the workshop we will add everyone to the gitops-workshop projec
 4. Use the `Create codespace on main` button to launch a new codespace
     
 <img src="https://github.com/NicholasCote/gitops-harbor-workshop/blob/main/media/gitops-codespace.png" alt="Fork" style="margin: auto">
+
+## Container Registry
+
+A container registry is a central location that hosts container images. There are a number of free public container registries, ghcr.io, quay.io, and hub.docker.com for example. The CIRRUS platform run by CISL contains its own container registry, https://hub.k8s.ucar.edu/, available to all UCAR staff. In order to push images to the CISL Container Registry, built on [Harbor](https://goharbor.com/), a CIRRUS admin has to create a project and add you to it. 
+
+At this point in the workshop we will add everyone to the gitops-workshop project with admin privileges. In order to do this you have to login to hub.k8s.ucar.edu first and then I have the ability to add you to the Harbor project. 
+
+**Note:** If you prefer to use a public repository like Docker Hub you can do this and still follow along with the workshop content. You will not use a robot account in Docker Hub, just your user id and password/API token. 
+
+### Creating a Robot Account
+
+Now that you have access to the gitops-workshop project, we need to create a robot account for GitHub Actions to authenticate with Harbor. Robot accounts are strongly recommended over personal accounts when logging in programmatically.
+
+**To create a robot account:**
+
+1. Log in to the Harbor Web UI at https://hub.k8s.ucar.edu/ using your CIT credentials
+2. Navigate to the `gitops-workshop` project (you should have Project Admin privileges)
+3. Click the **Robot Accounts** tab
+4. Click **+ NEW ROBOT ACCOUNT**
+5. In the popup window, provide the following details:
+   - **Name**: Choose a descriptive name (this will result in `robot$gitops-workshop+{your_name}`)
+   - **Expiration time**: Set a reasonable expiration date (e.g., 1 month from now) - avoid using "never expire"
+   - **Description**: Optional description for the robot account
+   - **Permissions**: Ensure "Push" and "Pull" permissions are selected
+
+6. Click **Add** to create the robot account
+7. **Important**: Copy and store the one-time secret securely - it will not be shown again and should not be exposed in plain text publicly
+
+**Note:** If you need to generate a new secret later, select the robot account, open the **ACTIONS** dropdown, and click **REFRESH SECRET**.
+
+## GitHub Secrets Configuration
+
+GitHub Actions needs secure access to your container registry credentials:
+
+1. In your forked repository, go to **Settings** → **Secrets and variables** → **Actions**
+2. Click "New repository secret"
+3. **Name**: `HARBOR_ROBOT_PW` (or `DOCKER_HUB_TOKEN` if using Docker Hub)
+4. **Secret**: Paste the robot account token you copied earlier
+5. Click "Add secret"
+
+Your workflow will now be able to authenticate with the container registry securely.
 
 ## Codespace & devcontainer
 
@@ -94,3 +127,142 @@ The application is now available at http://127.0.0.1:8001. There will be a pop u
 
 <img src="https://github.com/NicholasCote/gitops-harbor-workshop/blob/main/media/gitops-forward.png" alt="Fork" style="margin: auto">
 
+We have confirmed the web application is up and running. 
+
+## GitHub Actions Workflow
+
+Now let's create the automation workflow that will build, push, and deploy your application changes.
+
+### Creating the Workflow File
+
+1. In your codespace, create the GitHub Actions directory structure:
+   ```bash
+   mkdir -p .github/workflows
+   ```
+
+2. Create a new workflow file:
+   ```bash
+   touch .github/workflows/flask-app-cicd.yaml
+   ```
+
+3. Open the file and add the following workflow configuration:
+
+```yaml
+name: Flask App CI/CD Pipeline
+
+on: 
+  workflow_dispatch:
+  push:
+    paths:
+      - flask-app/**
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  GITHUB_BRANCH: ${{ github.ref_name }}
+  REGISTRY: hub.k8s.ucar.edu
+  PROJECT: gitops-workshop
+
+jobs:
+  image-build-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repo 
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Get current date
+        id: date
+        run: echo "date=$(date +'%Y-%m-%d.%H.%M')" >> $GITHUB_OUTPUT
+        
+      - name: Registry login
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: robot${{ github.actor }}+gitopsworkshop
+          password: ${{ secrets.HARBOR_ROBOT_PW }}
+          
+      - name: Build container image
+        run: |
+          docker buildx build -t ${{ env.REGISTRY }}/${{ env.PROJECT }}/flask-demo-${{ github.actor }}:${{ steps.date.outputs.date }} flask-app/
+          
+      - name: Push container image
+        run: |
+          docker push ${{ env.REGISTRY }}/${{ env.PROJECT }}/flask-demo-${{ github.actor }}:${{ steps.date.outputs.date }}
+          
+      - name: Update Helm values.yaml
+        run: |
+          sed -i "s|image: .*|image: ${{ env.REGISTRY }}/${{ env.PROJECT }}/flask-demo-${{ github.actor }}:${{ steps.date.outputs.date }}|" flask-helm/values.yaml
+          
+      - name: Update Helm Chart.yaml appVersion
+        run: |
+          sed -i "s|appVersion: .*|appVersion: ${{ steps.date.outputs.date }}|" flask-helm/Chart.yaml
+          
+      - name: Commit and push changes
+        run: |
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+          git config --global user.name "${{ github.actor }}"
+          git add flask-helm/values.yaml flask-helm/Chart.yaml
+          git commit -m "Update Helm chart with new image: ${{ steps.date.outputs.date }}"
+          git push
+```
+
+### Workflow Breakdown
+
+**Triggers:**
+- `workflow_dispatch`: Allows manual triggering from the GitHub Actions tab
+- `push` with `paths`: Automatically runs when changes are made to the `flask-app/` directory on the main branch
+
+**Key Steps:**
+1. **Checkout**: Downloads your repository code
+2. **Date Generation**: Creates a timestamp for image tagging
+3. **Registry Login**: Authenticates with Harbor using your robot account
+4. **Build**: Creates a new container image from your Flask app
+5. **Push**: Uploads the image to the container registry
+6. **Update Helm Files**: Modifies both `values.yaml` and `Chart.yaml` with the new image reference
+7. **Commit Changes**: Pushes the updated Helm chart back to your repository
+
+### Testing the Workflow
+
+Let's test our automation by making a change to the Flask application:
+
+1. Edit the style.css file:
+   ```
+   flask-app/app/static/style.css
+   ```
+
+2. Make a visible change, such as updating the body background color on line 9:
+   ```
+   background-color: #A8C700
+   ```
+
+3. Commit and push the change:
+   ```bash
+   git add flask-app/app/static/style.css
+   git commit -m "Update Flask app background color"
+   git push
+   ```
+
+4. Watch the workflow run:
+   - Go to your GitHub repository
+   - Click the "Actions" tab
+   - You should see your workflow running automatically
+   - Click on the workflow run to see detailed logs
+
+## Observing GitOps in Action
+
+Once the workflow completes successfully:
+
+1. **Check the updated files**: Your `flask-helm/values.yaml` and `flask-helm/Chart.yaml` should now reference the new container image
+2. **Wait for Argo CD**: Argo CD checks for changes every 3 minutes, or you can manually sync in the Argo CD UI
+3. **See the updated application**: Refresh your browser tab with the Flask app to see your changes live
+
+You've now experienced the complete GitOps cycle:
+- **Code Change** → **Automated Build** → **Registry Push** → **Chart Update** → **Automated Deployment**
+
+This approach ensures your running application always matches what's defined in your Git repository, with full traceability and automated deployments.

@@ -1,5 +1,14 @@
 @import url('https://fonts.googleapis.com/css?family=Poppins:400,600,700');
 
+body {
+    font-family: 'Poppins', Arial, sans-serif !important;
+    font-size: 2rem !important;
+    background-image: url("images/NCAR-Waves.png") !important;
+    background-position: right top !important;
+    background-repeat: no-repeat !important;
+    background-color: #dbe2e9 !important;
+}
+
 /* The navbar */
 /* DONE */
 /* The top level navbar */
@@ -158,15 +167,6 @@ hr.new {
 
 /* BODY */
 /* WORKING */
-
-body {
-    font-family: 'Poppins', Arial, sans-serif !important;
-    font-size: 2rem !important;
-    background-image: url("images/NCAR-Waves.png") !important;
-    background-position: right top !important;
-    background-repeat: no-repeat !important;
-    background-color: #dbe2e9 !important;
-}
 
 p {
     font-size: 1.25rem;
